@@ -1,0 +1,460 @@
+{% extends "base.html" %}
+{% block title %}ShopEase — Shop Smarter{% endblock %}
+
+<!-- ══════════════════════════════════════════════════════════════
+     PAGE-SPECIFIC STYLES — home / index page only
+══════════════════════════════════════════════════════════════ -->
+{% block extra_style %}
+<style>
+    /* ── HERO BANNER ── */
+    .hero-banner {
+        background: linear-gradient(135deg, #FF6B35 0%, #FF8C61 50%, #2D3748 100%);
+        padding: 48px 5%;
+        color: white;
+        position: relative;    /* For decorative circles inside */
+        overflow: hidden;      /* Clip decorative overflow circles */
+    }
+
+    /* Decorative circle — top right */
+    .hero-circle-1 {
+        position: absolute;
+        top: -40px;
+        right: -40px;
+        width: 300px;
+        height: 300px;
+        background: rgba(255,255,255,0.05); /* Faint white */
+        border-radius: 50%;
+    }
+
+    /* Decorative circle — bottom center-right */
+    .hero-circle-2 {
+        position: absolute;
+        bottom: -60px;
+        right: 120px;
+        width: 200px;
+        height: 200px;
+        background: rgba(255,255,255,0.07);
+        border-radius: 50%;
+    }
+
+    /* Hero heading */
+    .hero-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 2.8rem;
+        font-weight: 800;
+        line-height: 1.1;
+        max-width: 500px;
+        position: relative; /* Above decorative circles */
+        z-index: 1;
+    }
+
+    /* Highlighted word in hero title */
+    .hero-highlight {
+        color: #FED330; /* Yellow accent */
+    }
+
+    /* Hero subtitle */
+    .hero-subtitle {
+        margin-top: 12px;
+        opacity: 0.85;
+        font-size: 1.05rem;
+        max-width: 420px;
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Hero CTA button */
+    .hero-btn {
+        display: inline-block;
+        margin-top: 24px;
+        background: white;
+        color: var(--primary); /* Orange text on white */
+        border-radius: 50px;
+        padding: 12px 32px;
+        font-size: 1rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: var(--transition);
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Hero button hover */
+    .hero-btn:hover {
+        background: var(--primary); /* Invert on hover */
+        color: white;
+    }
+
+    /* ── PRODUCT COUNT / FILTER HEADER ── */
+    .products-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    /* Section title inside products header */
+    .products-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--secondary);
+    }
+
+    /* Small count label "(12 products)" */
+    .products-count {
+        font-size: 0.9rem;
+        font-weight: 400;
+        color: var(--text-muted);
+    }
+
+    /* ── CARD ACTION BUTTONS ── */
+    /* Cart button — outline style inside card */
+    .card-btn-cart {
+        flex: 1;
+        background: transparent;
+        border: 2px solid var(--border);
+        color: var(--text);
+        padding: 9px;
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        font-family: inherit;
+        transition: var(--transition);
+        text-align: center;
+    }
+
+    /* Cart button hover */
+    .card-btn-cart:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+
+    /* Buy Now button — orange filled */
+    .card-btn-buy {
+        flex: 1;
+        background: var(--primary);
+        color: white;
+        padding: 9px;
+        border: none;
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        font-family: inherit;
+        text-decoration: none;
+        text-align: center;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Buy Now hover */
+    .card-btn-buy:hover { background: var(--primary-dark); }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ════════════════════════════════════════════════════════════════
+     SEARCH BAR — full-width search input below the navbar
+════════════════════════════════════════════════════════════════ -->
+<div class="search-bar-wrapper">
+    <form class="search-form" method="GET" action="/">
+
+        <!-- Text input for search queries -->
+        <input type="text"
+               name="search"
+               class="search-input"
+               placeholder="🔍  Search clothes, brands, styles..."
+               value="{{ search }}"> <!-- Preserve current search value -->
+
+        <!-- Search submit button -->
+        <button type="submit" class="btn-search">Search</button>
+
+        <!-- Clear search button — only shown when a search is active -->
+        {% if search %}
+        <a href="/" class="btn btn-outline btn-sm" style="border-radius:50px;">✕ Clear</a>
+        {% endif %}
+
+    </form>
+</div>
+<!-- END SEARCH BAR -->
+
+<!-- ════════════════════════════════════════════════════════════════
+     CATEGORY FILTER BAR — clickable category pill buttons
+════════════════════════════════════════════════════════════════ -->
+<div class="category-bar">
+    {% for cat in categories %}
+    <!-- Each category passes itself as a URL parameter -->
+    <!-- Keeps the current search term when switching categories -->
+    <a href="/?category={{ cat }}{% if search %}&search={{ search }}{% endif %}"
+       class="cat-btn {% if selected_category == cat %}active{% endif %}">
+        {{ cat }}
+    </a>
+    {% endfor %}
+</div>
+<!-- END CATEGORY BAR -->
+
+<!-- ════════════════════════════════════════════════════════════════
+     HERO BANNER — shown only on the default home view (no search/filter)
+════════════════════════════════════════════════════════════════ -->
+{% if not search and selected_category == 'All' %}
+<div class="hero-banner">
+    <!-- Decorative background circles -->
+    <div class="hero-circle-1"></div>
+    <div class="hero-circle-2"></div>
+
+    <!-- Hero headline -->
+    <h1 class="hero-title">
+        Dress to<br>
+        <span class="hero-highlight">Impress.</span>
+    </h1>
+
+    <!-- Hero subtitle -->
+    <p class="hero-subtitle">
+        Premium fashion for every occasion. Shirts, kurtas, coats and more.
+    </p>
+
+    <!-- CTA Button — scrolls user to product grid -->
+    <a href="#products" class="hero-btn">Shop Now →</a>
+</div>
+{% endif %}
+<!-- END HERO BANNER -->
+
+<!-- ════════════════════════════════════════════════════════════════
+     PRODUCTS SECTION — grid of all matching products
+════════════════════════════════════════════════════════════════ -->
+<div class="main-content" id="products">
+
+    <!-- Section header with title and product count -->
+    <div class="products-header">
+        <h2 class="products-title">
+            {% if search %}
+                Results for "{{ search }}"
+            {% elif selected_category != 'All' %}
+                {{ selected_category }}s
+            {% else %}
+                All Products
+            {% endif %}
+            <span class="products-count">({{ products|length }})</span>
+        </h2>
+
+        <!-- Quick home link only shown during search/filter -->
+        {% if search or selected_category != 'All' %}
+        <a href="/" class="btn btn-outline btn-sm" style="border-radius:50px;">
+            🏠 View All
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Product grid — shown if products exist -->
+    {% if products %}
+    <div class="product-grid">
+
+        {% for p in products %}
+        <div class="product-card">
+
+            <!-- Product image — click to open detail page -->
+            <a href="/product/{{ p.id }}">
+                <img class="product-img"
+                     src="{{ p.image if p.image else 'https://via.placeholder.com/400x300?text=No+Image' }}"
+                     alt="{{ p.name }}"
+                     onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+                <!-- onerror: fallback if image URL is broken -->
+            </a>
+
+            <!-- Card body: category, name, price, stock, qty -->
+            <div class="product-body">
+
+                <!-- Category label -->
+                <span class="product-category">{{ p.category }}</span>
+
+                <!-- Product name — click to detail page -->
+                <a href="/product/{{ p.id }}" class="product-name">{{ p.name }}</a>
+
+                <!-- Price -->
+                <div class="product-price">₹{{ "%.0f"|format(p.price) }} <span>MRP</span></div>
+
+                <!-- Stock badge -->
+                {% if p.stock == 0 %}
+                    <span class="stock-badge stock-out">Out of Stock</span>
+                {% elif p.stock < 5 %}
+                    <span class="stock-badge stock-low">Only {{ p.stock }} left!</span>
+                {% else %}
+                    <span class="stock-badge stock-in">In Stock</span>
+                {% endif %}
+
+                <!-- Quantity selector — only if in stock -->
+                {% if p.stock > 0 %}
+                <div class="qty-control">
+                    <span style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">Qty:</span>
+                    <!-- Minus button -->
+                    <button type="button" class="qty-btn" onclick="changeQty(this, -1)">−</button>
+                    <!-- Quantity number input -->
+                    <input type="number" class="qty-input"
+                           value="1" min="1" max="{{ p.stock }}"
+                           id="qty-{{ p.id }}">
+                    <!-- Plus button -->
+                    <button type="button" class="qty-btn" onclick="changeQty(this, 1)">+</button>
+                </div>
+                {% endif %}
+
+            </div>
+            <!-- END CARD BODY -->
+
+            <!-- Card action buttons at the bottom -->
+            <div class="card-actions">
+
+                {% if p.stock == 0 %}
+                <!-- Out of stock — disable both buttons -->
+                <button class="btn btn-disabled" disabled>Out of Stock</button>
+
+                {% else %}
+                <!-- Add to Cart form -->
+                <form method="POST" action="/cart/add" style="flex:1;">
+                    <input type="hidden" name="product_id" value="{{ p.id }}">
+                    <!-- Hidden qty field — synced by JS before submit -->
+                    <input type="hidden" name="quantity" id="hidden-qty-{{ p.id }}" value="1">
+                    <button type="submit"
+                            class="card-btn-cart btn-block"
+                            onclick="syncQty({{ p.id }})">
+                        🛒 Cart
+                    </button>
+                </form>
+
+                <!-- Buy Now — goes directly to buy page -->
+                <a href="/product/{{ p.id }}" class="card-btn-buy">Buy Now</a>
+
+                {% endif %}
+            </div>
+            <!-- END CARD ACTIONS -->
+
+        </div>
+        {% endfor %}
+
+    </div>
+    <!-- END PRODUCT GRID -->
+
+    {% else %}
+    <!-- Empty state when no products match the search/filter -->
+    <div class="empty-state">
+        <div class="icon">🔍</div>
+        <h3>No products available</h3>
+        <p>Try a different search term or browse all categories.</p>
+        <a href="/" class="btn btn-primary mt-2" style="border-radius:50px; padding:12px 32px;">
+            View All Products
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+<!-- END PRODUCTS SECTION -->
+
+<!-- ════════════════════════════════════════════════════════════════
+     JAVASCRIPT — quantity selector logic for product cards
+════════════════════════════════════════════════════════════════ -->
+<script>
+    /**
+     * Change the quantity input by delta (+1 or -1).
+     * btn: the +/- button that was clicked
+     * delta: +1 to increase, -1 to decrease
+     */
+    function changeQty(btn, delta) {
+        /* Find the qty input in the same .qty-control row as the button */
+        var row = btn.closest('.qty-control');
+        var input = row.querySelector('input[type=number]');
+        var max = parseInt(input.max) || 99;
+        var val = parseInt(input.value) + delta;
+        if (val < 1)   val = 1;   /* Minimum quantity is 1 */
+        if (val > max) val = max; /* Maximum is the available stock */
+        input.value = val;
+    }
+
+    /**
+     * Sync the visible qty input to the hidden form field before submit.
+     * id: product ID used to find the correct pair of inputs.
+     */
+    function syncQty(id) {
+        var qty = document.getElementById('qty-' + id).value;
+        document.getElementById('hidden-qty-' + id).value = qty;
+    }
+</script>
+<!-- END JAVASCRIPT -->
+
+<!-- ════════════════════════════════════════════════════════════════
+     POPULAR PRODUCTS SECTION
+     Shown only on the default home view (no search, no filter).
+     Generated by recommendation.py using stock + category logic.
+     NOT personalized — labelled honestly as "Popular Products".
+════════════════════════════════════════════════════════════════ -->
+{% if popular_products %}
+<div class="main-content" style="padding-top:0; border-top:2px solid var(--border); margin-top:8px;">
+
+    <!-- Section heading -->
+    <div style="display:flex; align-items:center; justify-content:space-between;
+                margin-bottom:20px; flex-wrap:wrap; gap:10px;">
+        <div>
+            <h2 style="font-family:'Syne',sans-serif; font-size:1.5rem;
+                       font-weight:800; color:var(--secondary); margin-bottom:4px;">
+                {% if session.get('user_phone') and popular_label != 'Popular Products' %}
+                    🎯 Recommended For You
+                {% else %}
+                    🔥 Popular Products
+                {% endif %}
+            </h2>
+            <p style="color:var(--text-muted); font-size:0.85rem;">
+                {{ popular_label }}
+            </p>
+        </div>
+    </div>
+
+    <!-- Popular product cards — reuses product-grid and product-card styles -->
+    <div class="product-grid">
+        {% for p in popular_products %}
+        <div class="product-card">
+
+            <!-- Image — click opens product detail page -->
+            <a href="/product/{{ p.id }}">
+                <img class="product-img"
+                     src="{{ p.image if p.image else 'https://via.placeholder.com/400x300?text=No+Image' }}"
+                     alt="{{ p.name }}"
+                     onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+            </a>
+
+            <!-- Card body -->
+            <div class="product-body">
+                <span class="product-category">{{ p.category }}</span>
+                <a href="/product/{{ p.id }}" class="product-name">{{ p.name }}</a>
+                <div class="product-price">₹{{ "%.0f"|format(p.price) }}</div>
+                {% if p.stock == 0 %}
+                    <span class="stock-badge stock-out">Out of Stock</span>
+                {% elif p.stock < 5 %}
+                    <span class="stock-badge stock-low">Only {{ p.stock }} left!</span>
+                {% else %}
+                    <span class="stock-badge stock-in">In Stock</span>
+                {% endif %}
+            </div>
+
+            <!-- Action button -->
+            <div class="card-actions">
+                <a href="/product/{{ p.id }}"
+                   class="btn btn-primary btn-block"
+                   style="text-align:center;">
+                    View Product
+                </a>
+            </div>
+
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endif %}
+<!-- END POPULAR PRODUCTS SECTION -->
+
+{% endblock %}

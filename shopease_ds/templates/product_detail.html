@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} — ShopEase{% endblock %}
+
+<!-- ══════════════════════════════════════════════════════════════
+     PAGE-SPECIFIC STYLES — product detail page only
+     These styles are scoped to the product detail layout.
+══════════════════════════════════════════════════════════════ -->
+{% block extra_style %}
+<style>
+    /* Two-column layout: image left, details right */
+    .detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* Equal columns */
+        gap: 36px;
+        align-items: start;
+    }
+
+    /* Product image — full width within its column */
+    .detail-img {
+        width: 100%;
+        border-radius: var(--radius);     /* Rounded corners */
+        box-shadow: var(--card-shadow);   /* Soft shadow */
+        object-fit: cover;                /* Fill without distort */
+        max-height: 480px;
+    }
+
+    /* Info card on the right — sticks near top when scrolling */
+    .detail-info {
+        position: sticky;
+        top: 90px; /* Below the sticky navbar */
+    }
+
+    /* Large price display on detail page */
+    .detail-price {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--primary); /* Orange */
+        margin: 12px 0;
+        font-family: 'Syne', sans-serif;
+    }
+
+    /* Product description paragraph */
+    .detail-desc {
+        color: var(--text-muted);
+        line-height: 1.7;      /* Comfortable reading line height */
+        margin-bottom: 16px;
+    }
+
+    /* Trust/feature row below action buttons */
+    .trust-row {
+        display: flex;
+        gap: 20px;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        flex-wrap: wrap;
+    }
+
+    /* Collapse to single column on mobile/tablet */
+    @media (max-width: 768px) {
+        .detail-grid { grid-template-columns: 1fr; } /* Stack vertically */
+        .detail-info { position: static; }            /* No longer sticky */
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ════════════════════════════════════════════════════════════════
+     BREADCRUMB BAR — shows navigation path and quick Home link
+     Allows users to go: Home → Current Product
+════════════════════════════════════════════════════════════════ -->
+<div class="breadcrumb-bar">
+    <a href="/">🏠 Home</a>                          <!-- Back to home page -->
+    <span class="sep">›</span>
+    <a href="/">Products</a>                          <!-- Back to product listing -->
+    <span class="sep">›</span>
+    <span class="current">{{ product.name }}</span>   <!-- Current product name -->
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     PRODUCT DETAIL LAYOUT — image + info side by side
+════════════════════════════════════════════════════════════════ -->
+<div class="main-content">
+    <div class="detail-grid">
+
+        <!-- LEFT COLUMN: Product Image -->
+        <div>
+            <img class="detail-img"
+                 src="{{ product.image if product.image else 'https://via.placeholder.com/600x500?text=No+Image' }}"
+                 alt="{{ product.name }}"
+                 onerror="this.src='https://via.placeholder.com/600x500?text=No+Image'"> <!-- Fallback image -->
+        </div>
+
+        <!-- RIGHT COLUMN: Product Info + Actions -->
+        <div class="card detail-info">
+
+            <!-- Category label (e.g., SHIRT) -->
+            <span class="product-category">{{ product.category }}</span>
+
+            <!-- Product name heading -->
+            <h1 style="font-family:'Syne',sans-serif; font-size:1.9rem; font-weight:800; margin:8px 0; line-height:1.2;">
+                {{ product.name }}
+            </h1>
+
+            <!-- Price -->
+            <div class="detail-price">₹{{ "%.0f"|format(product.price) }}</div>
+
+            <!-- Stock status badge -->
+            {% if product.stock == 0 %}
+                <span class="stock-badge stock-out" style="font-size:0.9rem; padding:6px 16px;">❌ Out of Stock</span>
+            {% elif product.stock < 5 %}
+                <span class="stock-badge stock-low" style="font-size:0.9rem; padding:6px 16px;">⚠️ Only {{ product.stock }} left!</span>
+            {% else %}
+                <span class="stock-badge stock-in"  style="font-size:0.9rem; padding:6px 16px;">✅ In Stock ({{ product.stock }} available)</span>
+            {% endif %}
+
+            <!-- Divider line -->
+            <hr class="divider">
+
+            <!-- Product description (if available) -->
+            {% if product.description %}
+            <p class="detail-desc">{{ product.description }}</p>
+            {% endif %}
+
+            <!-- ── QUANTITY SELECTOR (only if in stock) ── -->
+            {% if product.stock > 0 %}
+            <div class="form-group">
+                <label>Quantity</label>
+                <div class="qty-control" style="max-width:160px;">
+                    <!-- Decrease button -->
+                    <button type="button" class="qty-btn" onclick="changeQty(-1)">−</button>
+                    <!-- Number input — min 1, max = available stock -->
+                    <input type="number" class="qty-input" id="main-qty"
+                           value="1" min="1" max="{{ product.stock }}"
+                           style="width:60px; font-size:1.1rem;">
+                    <!-- Increase button -->
+                    <button type="button" class="qty-btn" onclick="changeQty(1)">+</button>
+                </div>
+            </div>
+
+            <!-- ── ADD TO CART FORM ── -->
+            <form method="POST" action="/cart/add">
+                <input type="hidden" name="product_id" value="{{ product.id }}">
+                <input type="hidden" name="quantity" id="cart-qty" value="1"> <!-- JS syncs this -->
+                <button type="submit" class="btn btn-outline btn-block mb-2"
+                        onclick="syncQty()"
+                        style="padding:14px; font-size:1rem;">
+                    🛒 Add to Cart
+                </button>
+            </form>
+
+            <!-- ── BUY NOW FORM ── -->
+            <form method="POST" action="/buy_now/{{ product.id }}">
+                <input type="hidden" name="quantity" id="buy-qty" value="1"> <!-- JS syncs this -->
+                <button type="submit" class="btn btn-primary btn-block"
+                        onclick="syncQty()"
+                        style="padding:14px; font-size:1rem;">
+                    ⚡ Buy Now
+                </button>
+            </form>
+
+            {% else %}
+            <!-- Out of stock — disable both buttons -->
+            <button class="btn btn-disabled btn-block" disabled style="padding:14px; font-size:1rem;">
+                Out of Stock
+            </button>
+            {% endif %}
+
+            <!-- Divider -->
+            <hr class="divider">
+
+            <!-- Trust signals row -->
+            <div class="trust-row">
+                <span>🚚 Free Delivery</span>
+                <span>↩️ 7-Day Returns</span>
+                <span>🔒 Secure Payment</span>
+            </div>
+
+        </div>
+        <!-- END RIGHT COLUMN -->
+
+    </div>
+</div>
+<!-- END PRODUCT DETAIL LAYOUT -->
+
+<!-- ════════════════════════════════════════════════════════════════
+     JAVASCRIPT — quantity selector logic
+════════════════════════════════════════════════════════════════ -->
+<script>
+    /* Change quantity by delta (+1 or -1), clamped between 1 and stock max */
+    function changeQty(delta) {
+        var input = document.getElementById('main-qty');
+        var max = parseInt(input.max) || 99;
+        var val = parseInt(input.value) + delta;
+        if (val < 1)   val = 1;   /* Don't go below 1 */
+        if (val > max) val = max; /* Don't exceed stock */
+        input.value = val;
+    }
+
+    /* Sync the hidden form qty inputs before form submission */
+    function syncQty() {
+        var val = document.getElementById('main-qty').value;
+        document.getElementById('cart-qty').value = val; /* Cart form */
+        var buyQty = document.getElementById('buy-qty');
+        if (buyQty) buyQty.value = val; /* Buy Now form */
+    }
+</script>
+<!-- END JAVASCRIPT -->
+
+<!-- ════════════════════════════════════════════════════════════════
+     RECOMMENDED PRODUCTS SECTION
+     Generated by Content-Based Filtering (TF-IDF + Cosine Similarity)
+     Shown only when the recommendation engine returns results.
+════════════════════════════════════════════════════════════════ -->
+{% if recommendations %}
+<div class="main-content" style="padding-top:0;">
+
+    <!-- Section heading -->
+    <div style="display:flex; align-items:center; justify-content:space-between;
+                margin-bottom:20px; flex-wrap:wrap; gap:10px;">
+        <div>
+            <h2 style="font-family:'Syne',sans-serif; font-size:1.5rem;
+                       font-weight:800; color:var(--secondary); margin-bottom:4px;">
+                🎯 Recommended Products
+            </h2>
+            <!-- Honest label: content-based, not personalized -->
+            <p style="color:var(--text-muted); font-size:0.85rem;">
+                Based on product similarity — category, name &amp; description
+            </p>
+        </div>
+        <a href="/" class="btn btn-outline btn-sm" style="border-radius:50px;">
+            View All Products
+        </a>
+    </div>
+
+    <!-- Recommendation cards grid — reuses existing .product-grid and .product-card styles -->
+    <div class="product-grid">
+        {% for rec in recommendations %}
+        <div class="product-card">
+
+            <!-- Product image — click opens that product's detail page -->
+            <a href="/product/{{ rec.id }}">
+                <img class="product-img"
+                     src="{{ rec.image if rec.image else 'https://via.placeholder.com/400x300?text=No+Image' }}"
+                     alt="{{ rec.name }}"
+                     onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+            </a>
+
+            <!-- Card body -->
+            <div class="product-body">
+                <!-- Category label -->
+                <span class="product-category">{{ rec.category }}</span>
+
+                <!-- Product name — links to detail page -->
+                <a href="/product/{{ rec.id }}" class="product-name">{{ rec.name }}</a>
+
+                <!-- Price -->
+                <div class="product-price">₹{{ "%.0f"|format(rec.price) }}</div>
+
+                <!-- Stock badge -->
+                {% if rec.stock == 0 %}
+                    <span class="stock-badge stock-out">Out of Stock</span>
+                {% elif rec.stock < 5 %}
+                    <span class="stock-badge stock-low">Only {{ rec.stock }} left!</span>
+                {% else %}
+                    <span class="stock-badge stock-in">In Stock</span>
+                {% endif %}
+
+                <!-- Similarity score pill — shows the DS score transparently -->
+                <div style="margin-top:6px;">
+                    <span style="font-size:0.72rem; color:var(--text-muted);
+                                 font-weight:600;">Match score: </span>
+                    <span style="font-size:0.78rem; font-weight:700;
+                                 color:var(--primary);">
+                        {{ "%.0f"|format(rec.similarity_score * 100) }}%
+                    </span>
+                </div>
+            </div>
+
+            <!-- View Product button -->
+            <div class="card-actions">
+                <a href="/product/{{ rec.id }}"
+                   class="btn btn-primary btn-block"
+                   style="border-radius:var(--radius-sm); text-align:center;">
+                    👁 View Product
+                </a>
+            </div>
+
+        </div>
+        {% endfor %}
+    </div>
+    <!-- END RECOMMENDATION CARDS -->
+
+</div>
+{% endif %}
+<!-- END RECOMMENDED PRODUCTS SECTION -->
+
+{% endblock %}

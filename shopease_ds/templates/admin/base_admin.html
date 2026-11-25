@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="admin-layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-title">Main Menu</div>
+        <a href="/admin" class="{{ 'active' if request.path == '/admin' else '' }}">📊 Dashboard</a>
+        <a href="/admin/products" class="{{ 'active' if '/admin/products' in request.path else '' }}">🛍️ Products</a>
+        <a href="/admin/orders" class="{{ 'active' if '/admin/orders' in request.path else '' }}">
+            📦 Orders
+            {% if new_orders is defined and new_orders > 0 %}
+            <span class="badge-notify">{{ new_orders }}</span>
+            {% endif %}
+        </a>
+        <a href="/admin/customers" class="{{ 'active' if '/admin/customers' in request.path else '' }}">👥 Customers</a>
+        <a href="/admin/analysis"  class="{{ 'active' if '/admin/analysis'  in request.path else '' }}">📈 DS Analysis</a>
+        <div class="sidebar-title" style="margin-top:20px;">Account</div>
+        <a href="/">🏠 View Store</a>
+        <a href="/logout">👋 Logout</a>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="admin-main">
+        {% block admin_content %}{% endblock %}
+    </main>
+</div>
+{% endblock %}

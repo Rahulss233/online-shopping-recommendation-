@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block title %}Buy Now — ShopEase{% endblock %}
+
+<!-- ══════════════════════════════════════════════════════════════
+     PAGE-SPECIFIC STYLES — buy now page only
+══════════════════════════════════════════════════════════════ -->
+{% block extra_style %}
+<style>
+    /* Two-column layout: form left, product preview right */
+    .buynow-layout {
+        display: grid;
+        grid-template-columns: 1fr 360px;
+        gap: 24px;
+        align-items: start;
+    }
+
+    /* Product preview card — sticks below navbar when scrolling */
+    .product-preview {
+        position: sticky;
+        top: 90px;
+    }
+
+    /* Product thumbnail in preview card */
+    .preview-img {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+        border-radius: var(--radius-sm);
+        margin-bottom: 16px;
+    }
+
+    /* Price display in preview */
+    .preview-price {
+        font-size: 1.4rem;
+        font-weight: 800;
+        font-family: 'Syne', sans-serif;
+        color: var(--primary); /* Orange */
+    }
+
+    /* Read-only auto-filled input */
+    .readonly-field {
+        background: var(--bg) !important;
+        color: var(--text-muted);
+    }
+
+    /* Stack to single column on mobile */
+    @media (max-width: 768px) {
+        .buynow-layout { grid-template-columns: 1fr; }
+        .product-preview { position: static; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ════════════════════════════════════════════════════════════════
+     BREADCRUMB BAR — navigation path back to home/product
+════════════════════════════════════════════════════════════════ -->
+<div class="breadcrumb-bar">
+    <a href="/">🏠 Home</a>
+    <span class="sep">›</span>
+    <a href="/product/{{ product.id }}">{{ product.name }}</a> <!-- Back to product page -->
+    <span class="sep">›</span>
+    <span class="current">Buy Now</span>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     BUY NOW LAYOUT
+════════════════════════════════════════════════════════════════ -->
+<div class="main-content">
+
+    <!-- Page header -->
+    <div class="page-header">
+        <h1>⚡ Quick Buy</h1>
+        <p>You're one step away from your order!</p>
+    </div>
+
+    <div class="buynow-layout">
+
+        <!-- ── LEFT: Delivery Form ── -->
+        <form method="POST" action="/buy_now/{{ product.id }}">
+            <!-- Pass quantity as hidden field -->
+            <input type="hidden" name="quantity" value="{{ quantity }}">
+
+            <div class="card">
+                <div class="card-title">📍 Delivery Details</div>
+
+                <!-- Auto-filled user name -->
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" class="readonly-field" value="{{ session.user_name }}" readonly>
+                </div>
+
+                <!-- Auto-filled user phone -->
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="text" class="readonly-field" value="{{ session.user_phone }}" readonly>
+                </div>
+
+                <!-- User must enter delivery address -->
+                <div class="form-group">
+                    <label>Delivery Address <span style="color:var(--danger);">*</span></label>
+                    <textarea name="address"
+                              placeholder="House No., Street, Area, City, State, Pincode"
+                              required>{{ customer.address if customer and customer.address else '' }}</textarea>
+                </div>
+
+                <!-- Submit order button -->
+                <button type="submit" class="btn btn-primary btn-block"
+                        style="padding:14px; font-size:1rem; border-radius:50px;">
+                    ✅ Place Order
+                </button>
+
+                <!-- Go back to product page -->
+                <a href="/product/{{ product.id }}" class="btn btn-outline btn-block mt-1"
+                   style="padding:12px; border-radius:50px; text-align:center;">
+                    ← Back to Product
+                </a>
+
+                <!-- Go back to home -->
+                <a href="/" class="btn btn-outline btn-block mt-1"
+                   style="padding:12px; border-radius:50px; text-align:center;">
+                    🏠 Back to Home
+                </a>
+            </div>
+        </form>
+        <!-- END LEFT COLUMN -->
+
+        <!-- ── RIGHT: Product Preview Card ── -->
+        <div class="card product-preview">
+
+            <!-- Product thumbnail -->
+            <img class="preview-img"
+                 src="{{ product.image if product.image else 'https://via.placeholder.com/400x300' }}"
+                 alt="{{ product.name }}"
+                 onerror="this.src='https://via.placeholder.com/400x300?text=Product'">
+
+            <!-- Product name -->
+            <div class="card-title" style="margin-bottom:8px;">{{ product.name }}</div>
+
+            <!-- Category label -->
+            <span class="product-category">{{ product.category }}</span>
+
+            <!-- Quantity selected -->
+            <div style="color:var(--text-muted); font-size:0.9rem; margin:8px 0;">
+                Quantity: <strong>{{ quantity }}</strong>
+            </div>
+
+            <!-- Total price = unit price × qty -->
+            <div class="preview-price">₹{{ "%.0f"|format(product.price * quantity) }}</div>
+            <div style="font-size:0.82rem; color:var(--text-muted); margin-top:4px;">
+                ₹{{ "%.0f"|format(product.price) }} × {{ quantity }} unit(s)
+            </div>
+
+            <hr class="divider">
+
+            <!-- Quick info icons -->
+            <div style="display:flex; flex-direction:column; gap:8px; font-size:0.85rem; color:var(--text-muted);">
+                <div>🚚 Free Delivery</div>
+                <div>💵 Cash on Delivery</div>
+                <div>↩️ 7-Day Returns</div>
+            </div>
+
+        </div>
+        <!-- END RIGHT COLUMN -->
+
+    </div>
+</div>
+<!-- END BUY NOW LAYOUT -->
+
+{% endblock %}

@@ -1,0 +1,11 @@
+# ── Web Framework ───────────────────────────────────────────
+flask>=2.3.0
+
+# ── Data Science & Machine Learning ─────────────────────────
+pandas>=2.0.0          # DataFrame operations, groupby, SQL loading
+numpy>=1.24.0          # Numerical arrays, used internally by sklearn
+scikit-learn>=1.3.0    # TfidfVectorizer + cosine_similarity
+matplotlib>=3.7.0      # Chart generation (saved as PNG, no GUI needed)
+
+# ── Optional (improves price distribution chart if available) ─
+# scipy>=1.11.0        # KDE overlay on histogram — uncomment to enable

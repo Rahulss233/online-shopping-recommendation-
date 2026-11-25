@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% block title %}Checkout — ShopEase{% endblock %}
+
+<!-- ══════════════════════════════════════════════════════════════
+     PAGE-SPECIFIC STYLES — checkout page only
+══════════════════════════════════════════════════════════════ -->
+{% block extra_style %}
+<style>
+    /* Two-column layout: address form left, summary right */
+    .checkout-layout {
+        display: grid;
+        grid-template-columns: 1fr 360px; /* Form wider than sidebar */
+        gap: 24px;
+        align-items: start;
+    }
+
+    /* Read-only field (auto-filled user details) */
+    .readonly-field {
+        background: var(--bg) !important; /* Light grey — clearly non-editable */
+        color: var(--text-muted);
+    }
+
+    /* Order items list inside the summary card */
+    .order-item-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border); /* Row separator */
+    }
+
+    /* Item name text */
+    .order-item-name { font-weight: 600; }
+
+    /* Small "qty × price" label below name */
+    .order-item-meta {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    /* Sidebar info cards (Payment, Safe Shopping) */
+    .info-card {
+        background: var(--white);
+        border-radius: var(--radius);
+        box-shadow: var(--card-shadow);
+        padding: 18px;
+        margin-bottom: 14px;
+    }
+
+    /* Payment method tile */
+    .payment-tile {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px;
+        background: var(--bg);          /* Light grey */
+        border-radius: var(--radius-sm);
+    }
+
+    /* Stack to single column on mobile */
+    @media (max-width: 768px) {
+        .checkout-layout { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ════════════════════════════════════════════════════════════════
+     BREADCRUMB BAR
+════════════════════════════════════════════════════════════════ -->
+<div class="breadcrumb-bar">
+    <a href="/">🏠 Home</a>
+    <span class="sep">›</span>
+    <a href="/cart">Cart</a>
+    <span class="sep">›</span>
+    <span class="current">Checkout</span>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     CHECKOUT LAYOUT
+════════════════════════════════════════════════════════════════ -->
+<div class="main-content">
+
+    <!-- Page header -->
+    <div class="page-header">
+        <h1>🏁 Checkout</h1>
+        <p>Complete your purchase</p>
+    </div>
+
+    <div class="checkout-layout">
+
+        <!-- ── LEFT: Delivery Address Form ── -->
+        <form method="POST" action="/checkout">
+
+            <!-- Address input card -->
+            <div class="card mb-2">
+                <div class="card-title">📍 Delivery Details</div>
+
+                <!-- Auto-filled name (read-only) -->
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" class="readonly-field" value="{{ session.user_name }}" readonly>
+                </div>
+
+                <!-- Auto-filled phone (read-only) -->
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="text" class="readonly-field" value="{{ session.user_phone }}" readonly>
+                </div>
+
+                <!-- Editable delivery address -->
+                <div class="form-group">
+                    <label>Delivery Address <span style="color:var(--danger);">*</span></label>
+                    <textarea name="address"
+                              placeholder="House No., Street, Area, City, State, Pincode"
+                              required>{{ customer.address if customer and customer.address else '' }}</textarea>
+                              <!-- Pre-fills with saved address if available -->
+                </div>
+            </div>
+
+            <!-- Order items summary + totals + submit button card -->
+            <div class="card">
+                <div class="card-title">📦 Order Items</div>
+
+                <!-- List each cart item -->
+                {% for item in items %}
+                <div class="order-item-row">
+                    <div>
+                        <div class="order-item-name">{{ item.name }}</div>
+                        <div class="order-item-meta">{{ item.quantity }} × ₹{{ "%.0f"|format(item.price) }}</div>
+                    </div>
+                    <!-- Item subtotal -->
+                    <div style="font-weight:700;">₹{{ "%.0f"|format(item.price * item.quantity) }}</div>
+                </div>
+                {% endfor %}
+
+                <!-- Grand total -->
+                <div style="display:flex; justify-content:space-between; font-size:1.15rem;
+                            font-weight:800; margin-top:14px; font-family:'Syne',sans-serif;">
+                    <span>Total</span>
+                    <span style="color:var(--primary);">₹{{ "%.0f"|format(total) }}</span>
+                </div>
+
+                <!-- Place Order submit button -->
+                <button type="submit" class="btn btn-primary btn-block"
+                        style="margin-top:20px; padding:14px; font-size:1rem; border-radius:50px;">
+                    ✅ Place Order
+                </button>
+
+                <!-- Back to cart link -->
+                <a href="/cart" class="btn btn-outline btn-block mt-1"
+                   style="padding:12px; font-size:0.9rem; border-radius:50px; text-align:center;">
+                    ← Back to Cart
+                </a>
+
+                <!-- Back to home link -->
+                <a href="/" class="btn btn-outline btn-block mt-1"
+                   style="padding:12px; font-size:0.9rem; border-radius:50px; text-align:center;">
+                    🏠 Back to Home
+                </a>
+            </div>
+
+        </form>
+        <!-- END LEFT COLUMN -->
+
+        <!-- ── RIGHT: Info Sidebar ── -->
+        <div>
+
+            <!-- Payment method info -->
+            <div class="info-card">
+                <div class="card-title">💳 Payment Method</div>
+                <div class="payment-tile">
+                    <span style="font-size:1.5rem;">💵</span>
+                    <div>
+                        <div style="font-weight:600;">Cash on Delivery</div>
+                        <div style="font-size:0.82rem; color:var(--text-muted);">Pay when you receive your order</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shopping guarantees -->
+            <div class="info-card">
+                <div class="card-title">🛡️ Safe Shopping</div>
+                <div style="display:flex; flex-direction:column; gap:10px; font-size:0.88rem; color:var(--text-muted);">
+                    <span>✅ Secure checkout process</span>
+                    <span>🚚 Free delivery on all orders</span>
+                    <span>↩️ Easy 7-day returns</span>
+                    <span>📞 24/7 customer support</span>
+                </div>
+            </div>
+
+        </div>
+        <!-- END RIGHT COLUMN -->
+
+    </div>
+</div>
+<!-- END CHECKOUT LAYOUT -->
+
+{% endblock %}

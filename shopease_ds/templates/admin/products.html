@@ -1,0 +1,76 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Products — Admin{% endblock %}
+{% block admin_content %}
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+    <div>
+        <h1 style="font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;color:var(--secondary);">Products</h1>
+        <p style="color:var(--text-muted);">{{ products|length }} product(s) in store</p>
+    </div>
+    <a href="/admin/products/add" class="btn btn-primary" style="border-radius:50px;padding:10px 24px;">
+        + Add Product
+    </a>
+</div>
+
+{% if products %}
+<div class="table-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in products %}
+            <tr>
+                <td>
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <img src="{{ p.image if p.image else 'https://via.placeholder.com/50x50' }}"
+                             alt="{{ p.name }}"
+                             onerror="this.src='https://via.placeholder.com/50x50?text=?'"
+                             style="width:50px;height:50px;object-fit:cover;border-radius:var(--radius-sm);">
+                        <div>
+                            <div style="font-weight:600;">{{ p.name }}</div>
+                            <div style="font-size:0.78rem;color:var(--text-muted);">ID: #{{ p.id }}</div>
+                        </div>
+                    </div>
+                </td>
+                <td><span class="product-category">{{ p.category }}</span></td>
+                <td style="font-weight:700;">₹{{ "%.0f"|format(p.price) }}</td>
+                <td>
+                    {% if p.stock == 0 %}
+                    <span class="stock-badge stock-out">Out of Stock</span>
+                    {% elif p.stock < 5 %}
+                    <span class="stock-badge stock-low">{{ p.stock }} left</span>
+                    {% else %}
+                    <span class="stock-badge stock-in">{{ p.stock }}</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div style="display:flex;gap:8px;">
+                        <a href="/admin/products/edit/{{ p.id }}" class="btn btn-outline btn-sm">✏️ Edit</a>
+                        <form method="POST" action="/admin/products/delete/{{ p.id }}"
+                              onsubmit="return confirm('Delete {{ p.name }}?')">
+                            <button type="submit" class="btn btn-danger btn-sm">🗑 Delete</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% else %}
+<div class="empty-state">
+    <div class="icon">📦</div>
+    <h3>No products yet</h3>
+    <p>Add your first product to get started.</p>
+    <a href="/admin/products/add" class="btn btn-primary mt-2">+ Add Product</a>
+</div>
+{% endif %}
+{% endblock %}

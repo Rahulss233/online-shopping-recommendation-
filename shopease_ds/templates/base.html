@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ShopEase{% endblock %}</title>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         GOOGLE FONTS
+         Syne    → headings, titles, brand name (bold/display font)
+         DM Sans → body text, buttons, paragraphs (clean readable font)
+    ══════════════════════════════════════════════════════════════ -->
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        /* ══════════════════════════════════════════════════════════
+           CSS VARIABLES — DESIGN TOKENS
+           ─────────────────────────────────────────────────────────
+           To change the theme, only edit these variables.
+           Every color, shadow, and radius in the site uses them.
+
+           COLOR GUIDE:
+             --primary       → main orange brand color (buttons, links, badges)
+             --primary-dark  → darker orange used on hover states
+             --secondary     → dark navy blue (headings, navbar bg, sidebar)
+             --accent        → teal green (success states, in-stock badges)
+             --bg            → very light grey page background
+             --white         → card / input / navbar background
+             --text          → dark near-black for body text
+             --text-muted    → medium grey for secondary / helper text
+             --border        → light grey for input borders and dividers
+
+           EFFECT GUIDE:
+             --card-shadow       → subtle drop shadow under cards
+             --card-shadow-hover → stronger shadow when hovering a card
+             --radius            → corner roundness for cards
+             --radius-sm         → corner roundness for buttons and inputs
+             --transition        → timing for all hover / focus animations
+
+           ALERT COLORS:
+             --danger   → red   (errors, delete actions)
+             --success  → green (success messages, delivered badge)
+             --warning  → yellow (warnings, low stock, shipping badge)
+             --info     → sky blue (info messages, booked badge)
+        ══════════════════════════════════════════════════════════ */
+        :root {
+            --primary:           #FF6B35;                          /* Orange — change to rebrand */
+            --primary-dark:      #e55a26;                          /* Darker orange for :hover */
+            --secondary:         #2D3748;                          /* Dark navy */
+            --accent:            #00C9A7;                          /* Teal green */
+            --bg:                #F7F8FC;                          /* Page background (light grey) */
+            --white:             #ffffff;                          /* Cards, inputs, navbar */
+            --text:              #1a202c;                          /* Main body text */
+            --text-muted:        #718096;                          /* Secondary / helper text */
+            --border:            #E2E8F0;                          /* Borders and dividers */
+            --card-shadow:       0 4px 24px rgba(0,0,0,0.08);     /* Subtle shadow */
+            --card-shadow-hover: 0 12px 40px rgba(0,0,0,0.15);    /* Hover shadow */
+            --danger:            #FC5C65;                          /* Red */
+            --success:           #26de81;                          /* Green */
+            --warning:           #FED330;                          /* Yellow */
+            --info:              #4FC3F7;                          /* Sky blue */
+            --radius:            14px;                             /* Card corners */
+            --radius-sm:         8px;                              /* Button / input corners */
+            --transition:        0.25s cubic-bezier(0.4, 0, 0.2, 1); /* Smooth animation */
+        }
+
+        /* ══════════════════════════════════════════════════════════
+           GLOBAL RESET
+           Removes default browser margin/padding from every element.
+           box-sizing: border-box → padding is included in width/height.
+        ══════════════════════════════════════════════════════════ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* ══════════════════════════════════════════════════════════
+           BODY
+           Sets the default font, background, and text color.
+           display:flex + flex-direction:column → lets the footer
+           stick to the bottom using margin-top:auto on footer.
+        ══════════════════════════════════════════════════════════ */
+        body {
+            font-family: 'DM Sans', sans-serif; /* Body font */
+            background: var(--bg);              /* Light grey background */
+            color: var(--text);                 /* Dark text */
+            min-height: 100vh;                  /* Full viewport height */
+            display: flex;                      /* Flex container */
+            flex-direction: column;             /* Stack children vertically */
+        }
+
+        /* ══════════════════════════════════════════════════════════
+           NAVBAR — sticky top bar with branding and navigation
+           position:sticky + top:0 → stays visible while scrolling
+           z-index:1000 → floats above all other page content
+        ══════════════════════════════════════════════════════════ */
+        .navbar {
+            background: var(--white);                    /* White background */
+            padding: 0 5%;                               /* Horizontal spacing */
+            display: flex;                               /* Horizontal layout */
+            align-items: center;                         /* Vertically center items */
+            justify-content: space-between;              /* Brand left, links right */
+            height: 68px;                                /* Fixed height */
+            box-shadow: 0 2px 16px rgba(0,0,0,0.08);   /* Bottom shadow */
+            position: sticky;                            /* Stick to top on scroll */
+            top: 0;                                      /* Stick to top edge */
+            z-index: 1000;                               /* Always on top of content */
+        }
+
+        /* Brand / Logo text — left side of navbar */
+        .navbar-brand {
+            font-family: 'Syne', sans-serif; /* Display font */
+            font-weight: 800;                /* Extra bold */
+            font-size: 1.6rem;               /* Large text */
+            color: var(--primary);           /* Orange */
+            text-decoration: none;           /* No underline */
+            letter-spacing: -0.5px;          /* Slightly tighter */
+        }
+
+        /* Second word of brand name (e.g., "Ease") — dark navy */
+        .navbar-brand span {
+            color: var(--secondary);
+        }
+
+        /* Horizontal list of nav links — right side of navbar */
+        .nav-links {
+            display: flex;       /* Row layout */
+            align-items: center; /* Vertically centered */
+            gap: 4px;            /* Gap between links */
+            list-style: none;    /* No bullet points */
+        }
+
+        /* Each individual nav link */
+        .nav-links a {
+            display: flex;
+            align-items: center;             /* Align icon + label */
+            gap: 6px;                        /* Space between icon and text */
+            padding: 8px 14px;              /* Click area padding */
+            border-radius: var(--radius-sm); /* Rounded corners */
+            text-decoration: none;           /* No underline */
+            color: var(--text);              /* Dark text */
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: var(--transition);   /* Smooth hover effect */
+        }
+
+        /* Hover state for all nav links */
+        .nav-links a:hover {
+            background: var(--bg);      /* Light background */
+            color: var(--primary);      /* Orange text */
+        }
+
+        /* HOME button — styled as a pill with border to stand out */
+        .nav-links .btn-home {
+            background: var(--bg);             /* Light background */
+            color: var(--secondary);           /* Dark navy text */
+            border: 1.5px solid var(--border); /* Subtle border */
+            border-radius: 50px;               /* Pill shape */
+            font-weight: 600;
+        }
+
+        /* HOME button hover */
+        .nav-links .btn-home:hover {
+            background: var(--secondary); /* Dark background */
+            color: var(--white);          /* White text */
+            border-color: var(--secondary);
+        }
+
+        /* LOGIN button — filled orange pill */
+        .nav-links .btn-login {
+            background: var(--primary); /* Orange */
+            color: white;
+            border-radius: 50px;        /* Pill shape */
+            padding: 8px 20px;
+        }
+
+        /* LOGIN button hover */
+        .nav-links .btn-login:hover {
+            background: var(--primary-dark);
+        }
+
+        /* Cart badge — small orange circle showing item count */
+        .cart-badge {
+            background: var(--primary); /* Orange */
+            color: white;
+            border-radius: 50%;         /* Circle */
+            width: 20px;
+            height: 20px;
+            font-size: 0.7rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        /* ══════════════════════════════════════════════════════════
+           BREADCRUMB BAR — "You are here" navigation strip
+           Shown on inner pages so user knows where they are
+           and can quickly navigate back to Home or previous page.
+        ══════════════════════════════════════════════════════════ */
+        .breadcrumb-bar {
+            background: var(--white);               /* White strip */
+            padding: 10px 5%;                       /* Match page margins */
+            border-bottom: 1px solid var(--border); /* Bottom separator */
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.87rem;
+        }
+
+        /* Clickable breadcrumb link */
+        .breadcrumb-bar a {
+            color: var(--primary);    /* Orange */
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        /* Hover on breadcrumb link */
+        .breadcrumb-bar a:hover {
+            text-decoration: underline;
+        }
+
+        /* Breadcrumb separator arrow */
+        .breadcrumb-bar .sep {
+            color: var(--text-muted); /* Grey arrow */
+        }
+
+        /* Current page label (not clickable) */
+        .breadcrumb-bar .current {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* ══════════════════════════════════════════════════════════
+           FLASH MESSAGES — temporary alert banners
+           Shown after redirects (e.g., "Order placed successfully!")
+           Auto-dismissed after 4 seconds by JavaScript below.
+        ══════════════════════════════════════════════════════════ */
+        .flash-container {
+            padding: 12px 5%; /* Match page horizontal margins */
+            display: flex;
+            flex-direction: column;
+            gap: 8px; /* Space between stacked alerts */
+        }
+
+        /* Base alert style — all alert types share this */
+        .alert {
+            padding: 14px 20px;
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+            font-size: 0.92rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;                      /* Space between icon and text */
+            animation: slideDown 0.3s ease; /* Slide in from above */
+        }
+
+        /* Slide-down animation for alerts appearing */
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); } /* Start hidden/up */
+            to   { opacity: 1; transform: translateY(0); }     /* End visible */
+        }
+
+        /* SUCCESS — green (e.g., order placed, product added) */
+        .alert-success {
+            background: #d4f8e8;
+            color: #1a6b45;
+            border-left: 4px solid var(--success);
+        }
+
+        /* DANGER — red (e.g., login required, out of stock) */
+        .alert-danger {
+            background: #ffe0e3;
+            color: #7b1d28;
+            border-left: 4px solid var(--danger);
+        }
+
+        /* WARNING — yellow (e.g., empty cart, missing fields) */
+        .alert-warning {
+            background: #fff4d6;
+            color: #7a5500;
+            border-left: 4px solid var(--warning);
+        }
+
+        /* INFO — blue (e.g., logged out) */
+        .alert-info {
+            background: #e0f4ff;
+            color: #1a5276;
+            border-left: 4px solid var(--info);
+        }
+
+        /* ══════════════════════════════════════════════════════════
+           SEARCH BAR — search input row shown on home page
+        ══════════════════════════════════════════════════════════ */
+        .search-bar-wrapper {
+            background: var(--white);               /* White row */
+            padding: 16px 5%;                       /* Page margins */
+            border-bottom: 1px solid var(--border); /* Separator */
+        }
+
+        /* Form row inside the search bar */
+        .search-form {
+            display: flex;
+            gap: 10px;
+            max-width: 700px; /* Cap width */
+            margin: 0 auto;   /* Center it */
+        }
+
+        /* Search text input field */
+        .search-input {
+            flex: 1;                         /* Fills remaining width */
+            padding: 12px 20px;
+            border: 2px solid var(--border); /* Light grey border */
+            border-radius: 50px;             /* Rounded pill */
+            font-size: 0.95rem;
+            font-family: inherit;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        /* Search input gets orange border when focused */
+        .search-input:focus {
+            border-color: var(--primary);
+        }
+
+        /* Search submit button */
+        .btn-search {
+            padding: 12px 28px;
+            background: var(--primary);  /* Orange */
+            color: white;
+            border: none;
+            border-radius: 50px;         /* Pill */
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+
+        /* Search button hover */
+        .btn-search:hover {
+            background: var(--primary-dark);
+        }
+
+        /* ══════════════════════════════════════════════════════════
+           CATEGORY FILTER BAR — pill buttons for filtering by category
+        ══════════════════════════════════════════════════════════ */
+        .category-bar {
+            background: var(--white);
+            padding: 0 5% 14px;  /* Only bottom padding */
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;     /* Wrap to next line on small screens */
+        }
+
+        /* Individual category button (e.g., "Shirt", "Coat") */
+        .cat-btn {
+            padding: 6px 18px;
+            border: 2px solid var(--border); /* Default grey border */
+            border-radius: 50px;             /* Pill shape */
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--text-muted);        /* Grey text */
+            transition: var(--transition);
+            background: white;
+        }
+
+        /* Active or hovered category button */
+        .cat-btn:hover,
+        .cat-btn.active {
+            border-color: var(--primary); /* Orange border */
+            color: var(--primary);        /* Orange text */
+            background: #fff5f2;          /* Light orange tint */
+        }
+
+        /* ══════════════════════════════════════════════════════════
+           MAIN CONTENT WRAPPER
+           Wraps all page-specific content with consistent padding.
+           flex:1 → pushes footer to the bottom of the page.
+        ══════════════════════════════════════════════════════════ */
+        .main-content {
+            padding: 30px 5%; /* Top/bottom + left/right padding */
+            flex: 1;          /* Fill remaining vertical space */
+        }
+
+        /* Section heading (e.g., "All Products") */
+        .section-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--secondary);
+        }
+
+        /* ══════════════════════════════════════════════════════════
+           PRODUCT GRID — responsive auto-fill grid of product cards
+           auto-fill: creates as many columns as fit at min 220px each
+        ══════════════════════════════════════════════════════════ */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px; /* Space between cards */
+        }
+
+        /* ══════════════════════════════════════════════════════════
+           PRODUCT CARD — individual tile for a product
+        ══════════════════════════════════════════════════════════ */
+        .product-card {
+            background: var(--white);
+            border-radius: var(--radius);       /* Rounded corners */
+            overflow: hidden;                    /* Clip image to rounded corners */
+            box-shadow: var(--card-shadow);      /* Subtle shadow */
+            transition: var(--transition);       /* Smooth hover */
+            display: flex;
+            flex-direction: column;              /* Image on top, text below */
+        }
+
+        /* Card lifts and shadow deepens on hover */
+        .product-card:hover {
+            transform: translateY(-4px);          /* Lift 4px upward */
+            box-shadow: var(--card-shadow-hover); /* Stronger shadow */
+        }
+
+        /* Remove underline from links inside cards */
+        .product-card a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* Product image (fixed height so all cards align) */
+        .product-img {
+            width: 100%;
+            height: 200px;       /* Fixed height */
+            object-fit: cover;   /* Crop to fill without distorting */
+            display: block;
+        }
+
+        /* Card text area below the image */
+        .product-body {
+            padding: 14px;
+            flex: 1;             /* Fill remaining height */
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        /* Category label (e.g., SHIRT, T-SHIRT) — small caps */
+        .product-category {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase; /* ALL CAPS */
+            letter-spacing: 0.05em;    /* Wide letter spacing */
+            color: var(--primary);     /* Orange */
+        }
+
+        /* Product name heading */
+        .product-name {
+            font-family: 'Syne', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1.3;
+        }
+
+        /* Price display (e.g., ₹799) */
+        .product-price {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        /* "MRP" label next to price */
+        .product-price span {
+            font-size: 0.8rem;
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+
+        /* ══════════════════════════════════════════════════════════
+           STOCK BADGES — colored pill labels for stock status
+        ══════════════════════════════════════════════════════════ */
+        .stock-badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 50px;
+        }
+
+        /* In Stock — green */
+        .stock-in  { background: #d4f8e8; color: #1a6b45; }
+
+        /* Low Stock (< 5 units) — yellow */
+        .stock-low { background: #fff4d6; color: #7a5500; }
+
+        /* Out of Stock — red */
+        .stock-out { background: #ffe0e3; color: #7b1d28; }
+
+        /* ══════════════════════════════════════════════════════════
+           QUANTITY CONTROL — +/- buttons with number input
+        ══════════════════════════════════════════════════════════ */
+        .qty-control {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        /* Plus and Minus buttons */
+        .qty-btn {
+            width: 28px;
+            height: 28px;
+            border: 2px solid var(--border);
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        /* Hover state for +/- buttons */
+        .qty-btn:hover {
+            border-color: var(--primary); /* Orange border */
+            color: var(--primary);        /* Orange symbol */
+        }
+
+        /* Number input between + and - */
+        .qty-input {
+            width: 42px;
+            text-align: center;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            padding: 4px;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        /* Bottom action row inside product card */
+        .card-actions {
+            padding: 0 14px 14px;
+            display: flex;
+            gap: 8px;
+        }
+
+        /* ══════════════════════════════════════════════════════════
+           BUTTON SYSTEM
+           Always use .btn as the base class, plus one variant class.
+
+           Variants:
+             .btn-primary   → Orange filled (main CTA like "Buy Now")
+             .btn-secondary → Dark navy filled
+             .btn-outline   → Transparent with grey border
+             .btn-danger    → Red filled (delete, remove)
+             .btn-success   → Green filled (confirm, mark delivered)
+             .btn-disabled  → Grey, non-clickable
+             .btn-sm        → Smaller padding/font
+             .btn-block     → Full width
+        ══════════════════════════════════════════════════════════ */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            font-size: 0.88rem;
+            cursor: pointer;
+            border: none;
+            font-family: inherit;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        /* Orange filled — main action button */
+        .btn-primary  { background: var(--primary);   color: white; flex: 1; }
+        .btn-primary:hover  { background: var(--primary-dark); }
+
+        /* Dark filled */
+        .btn-secondary { background: var(--secondary); color: white; }
+        .btn-secondary:hover { background: #1a2535; }
+
+        /* Transparent with border */
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--border);
+            color: var(--text);
+        }
+        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+
+        /* Red filled — destructive actions */
+        .btn-danger  { background: var(--danger);  color: white; }
+        .btn-danger:hover  { background: #e04451; }
+
+        /* Green filled — positive confirmation */
+        .btn-success { background: var(--accent);  color: white; }
+
+        /* Grey non-clickable */
+        .btn-disabled {
+            background: var(--border);
+            color: var(--text-muted);
+            cursor: not-allowed;
+            flex: 1;
+        }
+
+        /* Smaller button variant */
+        .btn-sm { padding: 6px 14px; font-size: 0.82rem; }
+
+        /* Full-width button */
+        .btn-block { width: 100%; }
+
+        /* ══════════════════════════════════════════════════════════
+           PAGE HEADER — title block at the top of content pages
+        ══════════════════════════════════════════════════════════ */
+        .page-header { margin-bottom: 28px; }
+
+        .page-header h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--secondary);
+        }
+
+        .page-header p {
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* ══════════════════════════════════════════════════════════
+           EMPTY STATE — displayed when a list is empty
+           (e.g., empty cart, no orders, no search results)
+        ══════════════════════════════════════════════════════════ */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state .icon { font-size: 4rem; margin-bottom: 16px; }
+
+        .empty-state h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.4rem;
+            color: var(--secondary);
+            margin-bottom: 8px;
+        }
+
+        /* ══════════════════════════════════════════════════════════
+           CARD — white rounded container used throughout the site
+        ══════════════════════════════════════════════════════════ */
+        .card {
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--card-shadow);
+            padding: 24px;
+        }
+
+        /* Heading inside a card */
+        .card-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--secondary);
+        }
+
+        /* ══════════════════════════════════════════════════════════
+           TABLE — used in admin panels
+        ══════════════════════════════════════════════════════════ */
+        .table-wrapper {
+            overflow-x: auto;              /* Horizontal scroll on mobile */
+            border-radius: var(--radius);
+            box-shadow: var(--card-shadow);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse; /* No gaps between borders */
+            background: white;
+        }
+
+        /* Header row — dark navy background */
+        thead { background: var(--secondary); color: white; }
+
+        /* Header cell */
+        th {
+            padding: 14px 16px;
+            text-align: left;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        /* Data cell */
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border); /* Row divider */
+            font-size: 0.9rem;
+        }
+
+        /* Remove bottom border from last row */
+        tr:last-child td { border-bottom: none; }
+
+        /* Row highlight on hover */
+        tr:hover td { background: var(--bg); }
+
+        /* ══════════════════════════════════════════════════════════
+           FORM FIELDS — text inputs, dropdowns, textareas
+        ══════════════════════════════════════════════════════════ */
+        .form-group { margin-bottom: 18px; } /* Vertical spacing between fields */
+
+        /* Field label */
+        label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.88rem;
+            margin-bottom: 6px;
+            color: var(--secondary);
+        }
+
+        /* All input types share the same base style */
+        input[type="text"],
+        input[type="email"],
+        input[type="number"],
+        input[type="url"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border); /* Default grey border */
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 0.95rem;
+            outline: none;                   /* Remove default browser outline */
+            transition: var(--transition);
+            background: white;
+        }
+
+        /* Orange border when input is clicked / focused */
+        input:focus, textarea:focus, select:focus {
+            border-color: var(--primary);
+        }
+
+        /* Only allow vertical resize on textareas */
+        textarea {
+            resize: vertical;
+            min-height: 90px;
+        }
+
+        /* ══════════════════════════════════════════════════════════
+           ORDER STATUS BADGES — colored pills for order states
+        ══════════════════════════════════════════════════════════ */
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 50px;     /* Pill shape */
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Booked — sky blue */
+        .status-booked    { background: #e0f4ff; color: #1565c0; }
+
+        /* Shipping — yellow */
+        .status-shipping  { background: #fff4d6; color: #7a5500; }
+
+        /* Delivered — green */
+        .status-delivered { background: #d4f8e8; color: #1a6b45; }
+
+        /* ══════════════════════════════════════════════════════════
+           FOOTER — bottom bar of every page
+        ══════════════════════════════════════════════════════════ */
+        footer {
+            background: var(--secondary);        /* Dark navy */
+            color: rgba(255,255,255,0.7);         /* Dimmed white text */
+            text-align: center;
+            padding: 20px;
+            font-size: 0.88rem;
+            margin-top: auto;                    /* Push to bottom of flex column */
+        }
+
+        footer strong { color: white; } /* Highlight brand name */
+
+        /* ══════════════════════════════════════════════════════════
+           ADMIN LAYOUT — sidebar + main content side by side
+        ══════════════════════════════════════════════════════════ */
+        .admin-layout {
+            display: flex;
+            min-height: calc(100vh - 68px); /* Full height minus navbar */
+        }
+
+        /* Left navigation sidebar */
+        .sidebar {
+            width: 240px;                  /* Fixed width */
+            background: var(--secondary);  /* Dark navy */
+            padding: 24px 0;
+            flex-shrink: 0;                /* Do not shrink */
+        }
+
+        /* Section label above groups of sidebar links */
+        .sidebar .sidebar-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: rgba(255,255,255,0.4); /* Dimmed white */
+            padding: 0 20px;
+            margin-bottom: 8px;
+        }
+
+        /* Sidebar navigation link */
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.75); /* Semi-white */
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.92rem;
+            transition: var(--transition);
+        }
+
+        /* Active / hover state for sidebar link */
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: rgba(255,107,53,0.2);   /* Transparent orange */
+            color: var(--primary);              /* Orange text */
+            border-right: 3px solid var(--primary); /* Orange right stripe */
+        }
+
+        /* Small badge showing count (e.g., new orders) */
+        .sidebar .badge-notify {
+            margin-left: auto;          /* Push to right edge */
+            background: var(--primary); /* Orange */
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 700;
+            border-radius: 50px;
+            padding: 2px 8px;
+        }
+
+        /* Main content area to the right of sidebar */
+        .admin-main {
+            flex: 1;         /* Fill remaining width */
+            padding: 30px;
+            overflow: auto;  /* Scroll if content is tall */
+        }
+
+        /* ══════════════════════════════════════════════════════════
+           STATS CARDS — analytics boxes on admin dashboard
+        ══════════════════════════════════════════════════════════ */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 18px;
+            margin-bottom: 28px;
+        }
+
+        /* Individual stat card */
+        .stat-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 22px;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* Large emoji icon at top of stat card */
+        .stat-icon { font-size: 2rem; }
+
+        /* Small label text (e.g., "TOTAL ORDERS") */
+        .stat-label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        /* Large number (e.g., 42) */
+        .stat-value {
+            font-family: 'Syne', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--secondary);
+        }
+
+        /* Orange color variant for stat value */
+        .stat-card.orange .stat-value { color: var(--primary); }
+
+        /* Green color variant for stat value */
+        .stat-card.green  .stat-value { color: var(--accent); }
+
+        /* ══════════════════════════════════════════════════════════
+           HORIZONTAL DIVIDER LINE
+        ══════════════════════════════════════════════════════════ */
+        .divider {
+            border: none;
+            border-top: 1px solid var(--border); /* Thin grey line */
+            margin: 20px 0;
+        }
+
+        /* ══════════════════════════════════════════════════════════
+           UTILITY / HELPER CLASSES
+           Small single-purpose classes used inline in HTML.
+        ══════════════════════════════════════════════════════════ */
+        .text-muted      { color: var(--text-muted); }     /* Grey text */
+        .text-primary    { color: var(--primary); }        /* Orange text */
+        .text-center     { text-align: center; }           /* Center align */
+        .mt-1            { margin-top: 8px; }              /* Small top margin */
+        .mt-2            { margin-top: 16px; }             /* Medium top margin */
+        .mb-2            { margin-bottom: 16px; }          /* Medium bottom margin */
+        .flex            { display: flex; }                /* Flex container */
+        .gap-2           { gap: 12px; }                    /* Medium flex gap */
+        .align-center    { align-items: center; }          /* Center flex items */
+        .justify-between { justify-content: space-between; } /* Space out items */
+
+        /* ══════════════════════════════════════════════════════════
+           RESPONSIVE DESIGN — media queries
+           768px → tablet / large phone breakpoint
+           480px → small phone breakpoint
+        ══════════════════════════════════════════════════════════ */
+        @media (max-width: 768px) {
+            /* Reduce horizontal padding on small screens */
+            .navbar       { padding: 0 16px; }
+            .main-content { padding: 20px 16px; }
+
+            /* Switch to 2-column product grid on tablet */
+            .product-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+
+            /* Admin sidebar stacks above content on mobile */
+            .admin-layout  { flex-direction: column; }
+            .sidebar {
+                width: 100%;
+                padding: 12px 0;
+                display: flex;
+                overflow-x: auto;   /* Horizontal scroll when links overflow */
+            }
+            .sidebar a { white-space: nowrap; padding: 10px 14px; }
+
+            /* 2-column stats grid on tablet */
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+
+            /* Hide text labels in navbar on mobile (show only icons) */
+            .nav-links a .nav-text { display: none; }
+        }
+
+        @media (max-width: 480px) {
+            /* Single column on very small phones */
+            .product-grid { grid-template-columns: 1fr; }
+            .navbar-brand  { font-size: 1.3rem; }
+        }
+
+    </style>
+
+    <!-- Child templates can inject additional page-specific styles here -->
+    {% block extra_style %}{% endblock %}
+
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════════
+     NAVBAR — sticky navigation bar at the top of every page
+     Contains: Logo | Home | Cart | Orders | Admin (if admin) | Login/Logout
+════════════════════════════════════════════════════════════════ -->
+<nav class="navbar">
+
+    <!-- Site logo / brand — always navigates to home page -->
+    <a href="/" class="navbar-brand">Shop<span>Ease</span></a>
+
+    <!-- Navigation links on the right side -->
+    <ul class="nav-links">
+
+        <!-- HOME link — pill-styled so it's always visible and easy to find -->
+        <li>
+            <a href="/" class="btn-home">
+                🏠 <span class="nav-text">Home</span>
+            </a>
+        </li>
+
+        <!-- CART — shows item count badge if user has items in cart -->
+        <li>
+            <a href="/cart">
+                🛒 <span class="nav-text">Cart</span>
+                {% if cart_count is defined and cart_count > 0 %}
+                    <span class="cart-badge">{{ cart_count }}</span> <!-- Item count -->
+                {% endif %}
+            </a>
+        </li>
+
+        <!-- ORDERS — user's order history -->
+        <li>
+            <a href="/orders">📦 <span class="nav-text">Orders</span></a>
+        </li>
+
+        <!-- ADMIN PANEL link — only shown when logged in as admin -->
+        {% if session.get('is_admin') %}
+        <li>
+            <a href="/admin">⚙️ <span class="nav-text">Admin</span></a>
+        </li>
+        {% endif %}
+
+        <!-- AUTH: show Logout if logged in, Login button if not -->
+        {% if session.get('user_phone') %}
+        <li>
+            <!-- Logout link — shows first name of logged-in user -->
+            <a href="/logout">👋 <span class="nav-text">Logout ({{ session.user_name.split()[0] }})</span></a>
+        </li>
+        {% else %}
+        <li>
+            <!-- Login button — orange filled pill -->
+            <a href="/login" class="btn-login">👤 <span class="nav-text">Login</span></a>
+        </li>
+        {% endif %}
+
+    </ul>
+</nav>
+<!-- END NAVBAR -->
+
+<!-- ════════════════════════════════════════════════════════════════
+     FLASH MESSAGES — auto-disappearing status banners
+     Shown after actions: login, logout, order placed, error, etc.
+     JavaScript below fades them out after 4 seconds.
+════════════════════════════════════════════════════════════════ -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div class="flash-container">
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }}">
+        <!-- Emoji icon prefix based on alert type -->
+        {% if category == 'success' %}✅
+        {% elif category == 'danger' %}❌
+        {% elif category == 'warning' %}⚠️
+        {% else %}ℹ️{% endif %}
+        {{ message }} <!-- The actual alert message text -->
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+<!-- END FLASH MESSAGES -->
+
+<!-- ════════════════════════════════════════════════════════════════
+     PAGE CONTENT BLOCK
+     Each child template (index, cart, orders, etc.) fills this.
+════════════════════════════════════════════════════════════════ -->
+{% block content %}{% endblock %}
+<!-- END PAGE CONTENT -->
+
+<!-- ════════════════════════════════════════════════════════════════
+     FOOTER — shown at bottom of every page
+════════════════════════════════════════════════════════════════ -->
+<footer>
+    &copy; 2026 <strong>ShopEase</strong> — All rights reserved. Built with Flask &amp; ❤️
+</footer>
+<!-- END FOOTER -->
+
+<!-- ════════════════════════════════════════════════════════════════
+     JAVASCRIPT — auto-dismiss flash alerts after 4 seconds
+════════════════════════════════════════════════════════════════ -->
+<script>
+    // Wait 4 seconds then fade out all flash alert messages
+    setTimeout(function() {
+        document.querySelectorAll('.alert').forEach(function(el) {
+            el.style.transition = 'opacity 0.5s';  /* Fade animation */
+            el.style.opacity = '0';                 /* Make transparent */
+            setTimeout(function() { el.remove(); }, 500); /* Remove from page */
+        });
+    }, 4000); /* 4000ms = 4 seconds */
+</script>
+<!-- END JAVASCRIPT -->
+
+</body>
+</html>

@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% block title %}Login — ShopEase{% endblock %}
+
+<!-- ══════════════════════════════════════════════════════════════
+     PAGE-SPECIFIC STYLES — login page only
+══════════════════════════════════════════════════════════════ -->
+{% block extra_style %}
+<style>
+    /* Full-height centered wrapper */
+    .login-wrapper {
+        min-height: calc(100vh - 180px); /* Full height minus navbar + footer */
+        display: flex;
+        align-items: center;     /* Vertically center the card */
+        justify-content: center; /* Horizontally center the card */
+        padding: 30px 20px;
+    }
+
+    /* Login card container */
+    .login-card {
+        width: 100%;
+        max-width: 440px; /* Cap card width */
+    }
+
+    /* Top icon and title area */
+    .login-header {
+        text-align: center;
+        margin-bottom: 28px;
+    }
+
+    /* Large emoji icon above the form */
+    .login-icon {
+        font-size: 3rem;
+    }
+
+    /* Main "Welcome Back" heading */
+    .login-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--secondary);
+        margin-top: 8px;
+    }
+
+    /* Subtitle below heading */
+    .login-subtitle {
+        color: var(--text-muted);
+        margin-top: 4px;
+    }
+
+    /* Submit button — full width, large, pill shaped */
+    .btn-login-submit {
+        padding: 14px;
+        font-size: 1rem;
+        border-radius: 50px; /* Pill */
+        margin-top: 8px;
+    }
+
+    /* Note text below the form */
+    .login-note {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    /* Home link below the card */
+    .login-home-link {
+        text-align: center;
+        margin-top: 16px;
+        font-size: 0.88rem;
+    }
+
+    /* Security note at bottom */
+    .login-security {
+        text-align: center;
+        margin-top: 12px;
+        font-size: 0.82rem;
+        color: var(--text-muted);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ════════════════════════════════════════════════════════════════
+     BREADCRUMB BAR
+════════════════════════════════════════════════════════════════ -->
+<div class="breadcrumb-bar">
+    <a href="/">🏠 Home</a>
+    <span class="sep">›</span>
+    <span class="current">Login</span>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     LOGIN FORM — centered on page
+════════════════════════════════════════════════════════════════ -->
+<div class="login-wrapper">
+    <div class="login-card">
+
+        <!-- White card container -->
+        <div class="card">
+
+            <!-- Header: icon + title + subtitle -->
+            <div class="login-header">
+                <div class="login-icon">👤</div>
+                <h2 class="login-title">Welcome Back</h2>
+                <p class="login-subtitle">Sign in to continue shopping</p>
+            </div>
+
+            <!-- Login form — POST to /login -->
+            <form method="POST" action="/login">
+
+                <!-- Full name field -->
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text"
+                           id="name"
+                           name="name"
+                           placeholder="Enter your full name"
+                           required> <!-- Browser prevents empty submit -->
+                </div>
+
+                <!-- Phone number field -->
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="text"
+                           id="phone"
+                           name="phone"
+                           placeholder="Enter your phone number"
+                           required>
+                </div>
+
+                <!-- Email address field -->
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email"
+                           id="email"
+                           name="email"
+                           placeholder="Enter your email address"
+                           required>
+                </div>
+
+                <!-- Submit button -->
+                <button type="submit"
+                        class="btn btn-primary btn-block btn-login-submit">
+                    Continue →
+                </button>
+
+            </form>
+
+            <!-- Info note: new users get auto-registered -->
+            <p class="login-note">
+                New user? We'll create your account automatically.
+            </p>
+
+        </div>
+        <!-- END WHITE CARD -->
+
+        <!-- Link back to home without logging in -->
+        <div class="login-home-link">
+            <a href="/" class="btn btn-outline btn-sm"
+               style="border-radius:50px; margin-top:8px;">
+                🏠 Back to Home
+            </a>
+        </div>
+
+        <!-- Security note -->
+        <p class="login-security">🔒 Your data is safe with us</p>
+
+    </div>
+</div>
+<!-- END LOGIN FORM -->
+
+{% endblock %}

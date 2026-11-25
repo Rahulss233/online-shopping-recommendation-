@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+{% block title %}My Orders — ShopEase{% endblock %}
+
+<!-- ══════════════════════════════════════════════════════════════
+     PAGE-SPECIFIC STYLES — orders page only
+══════════════════════════════════════════════════════════════ -->
+{% block extra_style %}
+<style>
+    /* Tab button bar for filtering orders by status */
+    .tab-bar {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+
+    /* Individual tab filter button */
+    .tab-filter-btn {
+        padding: 8px 20px;
+        border: 2px solid var(--border);
+        border-radius: 50px;         /* Pill shape */
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        background: white;
+        color: var(--text-muted);
+        transition: var(--transition);
+        font-family: inherit;
+    }
+
+    /* Active / hover tab button */
+    .tab-filter-btn:hover,
+    .tab-filter-btn.active {
+        border-color: var(--primary);
+        color: var(--primary);
+        background: #fff5f2; /* Light orange tint */
+    }
+
+    /* Individual order card */
+    .order-card {
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
+        padding: 20px;
+        background: var(--white);
+        border-radius: var(--radius);
+        box-shadow: var(--card-shadow);
+        margin-bottom: 14px;
+    }
+
+    /* Status icon circle on the left of each order */
+    .order-icon {
+        flex-shrink: 0;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;       /* Circle */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+    }
+
+    /* Color-coded icon background by status */
+    .order-icon.booked    { background: #e0f4ff; } /* Blue for Booked */
+    .order-icon.shipping  { background: #fff4d6; } /* Yellow for Shipping */
+    .order-icon.delivered { background: #d4f8e8; } /* Green for Delivered */
+
+    /* Order main info section */
+    .order-body { flex: 1; }
+
+    /* Order product name */
+    .order-product-name {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.05rem;
+        font-weight: 700;
+    }
+
+    /* Order meta info row (ID, qty) */
+    .order-meta {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        margin-top: 3px;
+    }
+
+    /* Address box inside order card */
+    .order-address-box {
+        margin-top: 10px;
+        padding: 10px;
+        background: var(--bg);          /* Light grey box */
+        border-radius: var(--radius-sm);
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    /* Order timestamp */
+    .order-time {
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        margin-top: 6px;
+    }
+
+    /* Right side: price + status badge */
+    .order-right {
+        text-align: right;
+        flex-shrink: 0;
+    }
+
+    /* Order total price */
+    .order-price {
+        font-size: 1.15rem;
+        font-weight: 800;
+        font-family: 'Syne', sans-serif;
+        color: var(--secondary);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ════════════════════════════════════════════════════════════════
+     BREADCRUMB BAR — navigation path
+════════════════════════════════════════════════════════════════ -->
+<div class="breadcrumb-bar">
+    <a href="/">🏠 Home</a>              <!-- Back to home -->
+    <span class="sep">›</span>
+    <span class="current">📦 My Orders</span>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     ORDERS CONTENT
+════════════════════════════════════════════════════════════════ -->
+<div class="main-content">
+
+    <!-- Page header -->
+    <div class="page-header">
+        <h1>📦 My Orders</h1>
+        <p>Track and manage all your orders</p>
+    </div>
+
+    <!-- Show orders if there are any -->
+    {% if orders %}
+
+    <!-- Filter tab buttons -->
+    <div class="tab-bar">
+        <!-- All orders tab -->
+        <button class="tab-filter-btn active" onclick="filterOrders('all', this)">
+            All ({{ orders|length }})
+        </button>
+
+        <!-- Filter by Booked status -->
+        <button class="tab-filter-btn" onclick="filterOrders('Booked', this)">
+            🔵 Booked
+        </button>
+
+        <!-- Filter by Shipping status -->
+        <button class="tab-filter-btn" onclick="filterOrders('Shipping', this)">
+            🟡 Shipping
+        </button>
+
+        <!-- Filter by Delivered status -->
+        <button class="tab-filter-btn" onclick="filterOrders('Delivered', this)">
+            🟢 Delivered
+        </button>
+    </div>
+
+    <!-- Orders list container -->
+    <div id="orders-list">
+        {% for order in orders %}
+
+        <!-- Each order card — data-status used by JS filter -->
+        <div class="order-card" data-status="{{ order.status }}">
+
+            <!-- Status icon circle -->
+            <div class="order-icon {{ order.status|lower }}">
+                {% if order.status == 'Delivered' %}✅
+                {% elif order.status == 'Shipping' %}🚚
+                {% else %}📋{% endif %}
+            </div>
+
+            <!-- Order details body -->
+            <div class="order-body">
+
+                <!-- Product name and status badge -->
+                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                    <span class="order-product-name">{{ order.product }}</span>
+                    <span class="status-badge status-{{ order.status|lower }}">{{ order.status }}</span>
+                </div>
+
+                <!-- Order ID and quantity -->
+                <div class="order-meta">
+                    Order ID: <strong style="color:var(--primary);">{{ order.order_id }}</strong>
+                    &nbsp;·&nbsp; Qty: {{ order.quantity }}
+                </div>
+
+                <!-- Delivery address box -->
+                <div class="order-address-box">
+                    📍 {{ order.address }}
+                </div>
+
+                <!-- Order placement timestamp -->
+                {% if order.created_at %}
+                <div class="order-time">🕐 Ordered: {{ order.created_at }}</div>
+                {% endif %}
+
+            </div>
+
+            <!-- Right side: price and status -->
+            <div class="order-right">
+                <div class="order-price">₹{{ "%.0f"|format(order.price) }}</div>
+                <!-- Status note under price -->
+                <div style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;">
+                    {% if order.status == 'Booked' %}Awaiting dispatch
+                    {% elif order.status == 'Shipping' %}On the way
+                    {% else %}Delivered ✅{% endif %}
+                </div>
+            </div>
+
+        </div>
+        {% endfor %}
+    </div>
+    <!-- END ORDERS LIST -->
+
+    <!-- Continue shopping link at bottom -->
+    <div style="margin-top:20px;">
+        <a href="/" class="btn btn-outline" style="border-radius:50px; padding:10px 24px;">
+            🏠 Continue Shopping
+        </a>
+    </div>
+
+    {% else %}
+    <!-- Empty state when user has no orders -->
+    <div class="empty-state">
+        <div class="icon">📭</div>
+        <h3>No orders yet</h3>
+        <p>Your order history will appear here once you place an order.</p>
+        <a href="/" class="btn btn-primary mt-2" style="border-radius:50px; padding:12px 32px;">
+            🏠 Start Shopping
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+<!-- END ORDERS CONTENT -->
+
+<!-- ════════════════════════════════════════════════════════════════
+     JAVASCRIPT — filter orders by status tab
+════════════════════════════════════════════════════════════════ -->
+<script>
+    /**
+     * Filter visible order cards by status.
+     * @param {string} status - 'all', 'Booked', 'Shipping', or 'Delivered'
+     * @param {HTMLElement} activeBtn - the clicked button (to mark active)
+     */
+    function filterOrders(status, activeBtn) {
+        /* Show or hide each order card based on its data-status attribute */
+        document.querySelectorAll('.order-card').forEach(function(card) {
+            if (status === 'all' || card.dataset.status === status) {
+                card.style.display = 'flex'; /* Show matching cards */
+            } else {
+                card.style.display = 'none'; /* Hide non-matching */
+            }
+        });
+
+        /* Remove active class from all tab buttons */
+        document.querySelectorAll('.tab-filter-btn').forEach(function(btn) {
+            btn.classList.remove('active');
+        });
+
+        /* Add active class to the clicked button */
+        activeBtn.classList.add('active');
+    }
+</script>
+<!-- END JAVASCRIPT -->
+
+{% endblock %}

@@ -1,0 +1,79 @@
+<div class="card" style="margin-bottom:16px;border-left:5px solid
+    {% if order.status == 'Booked' %}#4FC3F7{% elif order.status == 'Shipping' %}#FED330{% else %}#26de81{% endif %};">
+
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;">
+
+        <!-- LEFT: ORDER INFO -->
+        <div style="flex:1;min-width:260px;">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+                <span style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;">{{ order.product }}</span>
+                <span class="status-badge status-{{ order.status|lower }}">
+                    {% if order.status == 'Booked' %}📋{% elif order.status == 'Shipping' %}🚚{% else %}✅{% endif %}
+                    {{ order.status }}
+                </span>
+            </div>
+            <div style="display:grid;grid-template-columns:120px 1fr;gap:6px 12px;font-size:0.88rem;">
+                <span style="color:var(--text-muted);font-weight:600;">🆔 Order ID</span>
+                <strong style="color:var(--primary);">{{ order.order_id }}</strong>
+
+                <span style="color:var(--text-muted);font-weight:600;">👤 Customer</span>
+                <span>{{ order.name }}</span>
+
+                <span style="color:var(--text-muted);font-weight:600;">📞 Phone</span>
+                <span>{{ order.phone }}</span>
+
+                <span style="color:var(--text-muted);font-weight:600;">📍 Address</span>
+                <span>{{ order.address }}</span>
+
+                <span style="color:var(--text-muted);font-weight:600;">📦 Quantity</span>
+                <span>{{ order.quantity }} unit(s)</span>
+
+                <span style="color:var(--text-muted);font-weight:600;">💰 Amount</span>
+                <strong style="color:var(--secondary);font-size:1rem;">₹{{ "%.0f"|format(order.price) }}</strong>
+            </div>
+        </div>
+
+        <!-- RIGHT: ADMIN ACTION PANEL -->
+        <div style="min-width:210px;display:flex;flex-direction:column;gap:10px;">
+
+            {% if order.status == 'Booked' %}
+            <div style="background:#fff9e6;border:2px solid #FED330;border-radius:var(--radius);padding:16px;text-align:center;">
+                <div style="font-size:0.75rem;font-weight:700;color:#7a5500;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;">
+                    ⚙️ Admin Action Required
+                </div>
+                <form method="POST" action="/admin/orders/update/{{ order.id }}">
+                    <input type="hidden" name="status" value="Shipping">
+                    <button type="submit" class="btn btn-block"
+                            style="background:#FED330;color:#3d2a00;font-weight:800;font-size:1rem;padding:13px;border-radius:var(--radius-sm);">
+                        🚚 Mark as Shipping
+                    </button>
+                </form>
+                <div style="font-size:0.75rem;color:#7a5500;margin-top:8px;">Click when order is dispatched</div>
+            </div>
+
+            {% elif order.status == 'Shipping' %}
+            <div style="background:#e8fdf5;border:2px solid #26de81;border-radius:var(--radius);padding:16px;text-align:center;">
+                <div style="font-size:0.75rem;font-weight:700;color:#1a6b45;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;">
+                    ⚙️ Admin Action Required
+                </div>
+                <form method="POST" action="/admin/orders/update/{{ order.id }}">
+                    <input type="hidden" name="status" value="Delivered">
+                    <button type="submit" class="btn btn-block"
+                            style="background:#26de81;color:#0d3d22;font-weight:800;font-size:1rem;padding:13px;border-radius:var(--radius-sm);">
+                        ✅ Mark as Delivered
+                    </button>
+                </form>
+                <div style="font-size:0.75rem;color:#1a6b45;margin-top:8px;">Click when customer receives order</div>
+            </div>
+
+            {% else %}
+            <div style="background:#d4f8e8;border:2px solid #26de81;border-radius:var(--radius);padding:16px;text-align:center;">
+                <div style="font-size:2rem;margin-bottom:6px;">🎉</div>
+                <div style="font-weight:800;color:#1a6b45;font-family:'Syne',sans-serif;">Order Completed</div>
+                <div style="font-size:0.78rem;color:#1a6b45;margin-top:4px;">Successfully delivered to customer</div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>

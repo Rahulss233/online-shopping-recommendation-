@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+{% block title %}My Cart — ShopEase{% endblock %}
+
+<!-- ══════════════════════════════════════════════════════════════
+     PAGE-SPECIFIC STYLES — cart page only
+══════════════════════════════════════════════════════════════ -->
+{% block extra_style %}
+<style>
+    /* Two-column layout: cart items left, order summary right */
+    .cart-layout {
+        display: grid;
+        grid-template-columns: 1fr 340px; /* Items get more space */
+        gap: 24px;
+        align-items: start;
+    }
+
+    /* Individual cart item row card */
+    .cart-item {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        padding: 16px;
+        background: var(--white);
+        border-radius: var(--radius);
+        box-shadow: var(--card-shadow);
+    }
+
+    /* Product thumbnail image in cart */
+    .cart-item-img {
+        width: 90px;
+        height: 90px;
+        object-fit: cover;              /* Fill without distort */
+        border-radius: var(--radius-sm);
+        flex-shrink: 0;                 /* Don't shrink on small screens */
+    }
+
+    /* Text info section of cart item */
+    .cart-item-info {
+        flex: 1; /* Takes remaining width */
+    }
+
+    /* Product name in cart */
+    .cart-item-name {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--text);
+        text-decoration: none;
+    }
+
+    /* Hover on product name — underline */
+    .cart-item-name:hover { text-decoration: underline; }
+
+    /* Unit price below name */
+    .cart-item-price {
+        color: var(--primary); /* Orange */
+        font-weight: 700;
+        font-size: 1.05rem;
+        margin-top: 4px;
+    }
+
+    /* Qty control buttons area in cart item */
+    .cart-qty-controls {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    /* Qty number label between + and - */
+    .cart-qty-num {
+        width: 36px;
+        text-align: center;
+        font-weight: 700;
+    }
+
+    /* Right side: subtotal + remove button */
+    .cart-item-subtotal {
+        min-width: 90px;
+        text-align: right;
+    }
+
+    /* Subtotal price (qty × unit price) */
+    .cart-subtotal-price {
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    /* Remove button text link style */
+    .btn-remove {
+        color: var(--danger);  /* Red */
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 0.82rem;
+        padding: 0;
+        margin-top: 8px;
+        display: block;
+        font-family: inherit;
+    }
+
+    /* Remove button hover — underline */
+    .btn-remove:hover { text-decoration: underline; }
+
+    /* Order summary sidebar card — sticky so it stays visible while scrolling */
+    .order-summary {
+        position: sticky;
+        top: 90px; /* Below navbar */
+    }
+
+    /* Summary row (e.g., Subtotal · FREE) */
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        font-size: 0.92rem;
+    }
+
+    /* Total row — bigger and bolder */
+    .summary-total {
+        display: flex;
+        justify-content: space-between;
+        font-size: 1.15rem;
+        font-weight: 800;
+        font-family: 'Syne', sans-serif;
+        margin-bottom: 20px;
+    }
+
+    /* Stack to single column on tablet/mobile */
+    @media (max-width: 768px) {
+        .cart-layout { grid-template-columns: 1fr; } /* Single column */
+        .cart-item { flex-wrap: wrap; }               /* Allow wrapping */
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ════════════════════════════════════════════════════════════════
+     BREADCRUMB BAR — navigation path with Home link
+════════════════════════════════════════════════════════════════ -->
+<div class="breadcrumb-bar">
+    <a href="/">🏠 Home</a>              <!-- Back to home -->
+    <span class="sep">›</span>
+    <span class="current">🛒 Cart</span> <!-- Current page -->
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     CART CONTENT AREA
+════════════════════════════════════════════════════════════════ -->
+<div class="main-content">
+
+    <!-- Page title -->
+    <div class="page-header">
+        <h1>🛒 Your Cart</h1>
+        <p>{{ items|length }} item(s) in your cart</p>
+    </div>
+
+    <!-- Show cart items if cart is not empty -->
+    {% if items %}
+    <div class="cart-layout">
+
+        <!-- LEFT: Cart Items List -->
+        <div style="display:flex; flex-direction:column; gap:14px;">
+            {% for item in items %}
+            <div class="cart-item">
+
+                <!-- Product thumbnail — click to go to product page -->
+                <img class="cart-item-img"
+                     src="{{ item.image if item.image else 'https://via.placeholder.com/100x100' }}"
+                     alt="{{ item.name }}"
+                     onerror="this.src='https://via.placeholder.com/100x100?text=?'">
+
+                <!-- Product info -->
+                <div class="cart-item-info">
+                    <!-- Product name links to product detail page -->
+                    <a href="/product/{{ item.product_id }}" class="cart-item-name">{{ item.name }}</a>
+                    <div class="cart-item-price">₹{{ "%.0f"|format(item.price) }} each</div>
+                </div>
+
+                <!-- Quantity +/- controls -->
+                <div class="cart-qty-controls">
+                    <!-- Decrease quantity form -->
+                    <form method="POST" action="/cart/update" style="display:inline;">
+                        <input type="hidden" name="cart_id" value="{{ item.id }}">
+                        <input type="hidden" name="action" value="decrease">
+                        <button type="submit" class="qty-btn">−</button>
+                    </form>
+
+                    <!-- Current quantity display -->
+                    <span class="cart-qty-num">{{ item.quantity }}</span>
+
+                    <!-- Increase quantity form — disabled if at max stock -->
+                    <form method="POST" action="/cart/update" style="display:inline;">
+                        <input type="hidden" name="cart_id" value="{{ item.id }}">
+                        <input type="hidden" name="action" value="increase">
+                        <button type="submit" class="qty-btn"
+                                {% if item.quantity >= item.stock %}disabled title="Max stock reached"{% endif %}>+</button>
+                    </form>
+                </div>
+
+                <!-- Right: Subtotal + Remove -->
+                <div class="cart-item-subtotal">
+                    <!-- Subtotal = unit price × quantity -->
+                    <div class="cart-subtotal-price">₹{{ "%.0f"|format(item.price * item.quantity) }}</div>
+
+                    <!-- Remove item from cart -->
+                    <form method="POST" action="/cart/update">
+                        <input type="hidden" name="cart_id" value="{{ item.id }}">
+                        <input type="hidden" name="action" value="remove">
+                        <button type="submit" class="btn-remove">🗑 Remove</button>
+                    </form>
+                </div>
+
+            </div>
+            {% endfor %}
+
+            <!-- Continue Shopping link at bottom of item list -->
+            <div>
+                <a href="/" class="btn btn-outline btn-sm" style="border-radius:50px;">
+                    ← Continue Shopping
+                </a>
+            </div>
+        </div>
+        <!-- END LEFT COLUMN -->
+
+        <!-- RIGHT: Order Summary -->
+        <div class="card order-summary">
+            <div class="card-title">Order Summary</div>
+
+            <!-- Subtotal row -->
+            <div class="summary-row">
+                <span style="color:var(--text-muted);">Subtotal ({{ items|length }} items)</span>
+                <span>₹{{ "%.0f"|format(total) }}</span>
+            </div>
+
+            <!-- Delivery row — always FREE -->
+            <div class="summary-row">
+                <span style="color:var(--text-muted);">Delivery</span>
+                <span style="color:var(--accent); font-weight:600;">FREE</span>
+            </div>
+
+            <!-- Divider before grand total -->
+            <hr class="divider">
+
+            <!-- Grand total row -->
+            <div class="summary-total">
+                <span>Total</span>
+                <span style="color:var(--primary);">₹{{ "%.0f"|format(total) }}</span>
+            </div>
+
+            <!-- Proceed to checkout button -->
+            <a href="/checkout" class="btn btn-primary btn-block"
+               style="padding:14px; font-size:1rem; text-align:center; border-radius:50px;">
+                Proceed to Checkout →
+            </a>
+
+            <!-- Back to home button -->
+            <a href="/" class="btn btn-outline btn-block mt-1"
+               style="padding:12px; font-size:0.9rem; border-radius:50px; text-align:center;">
+                🏠 Back to Home
+            </a>
+        </div>
+        <!-- END RIGHT COLUMN -->
+
+    </div>
+
+    <!-- Empty cart state -->
+    {% else %}
+    <div class="empty-state">
+        <div class="icon">🛒</div>
+        <h3>Your cart is empty</h3>
+        <p>Looks like you haven't added any products yet.</p>
+        <!-- Button to go back and shop -->
+        <a href="/" class="btn btn-primary mt-2" style="border-radius:50px; padding:12px 32px;">
+            🏠 Start Shopping
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+<!-- END CART CONTENT AREA -->
+
+{% endblock %}

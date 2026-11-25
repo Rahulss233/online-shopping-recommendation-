@@ -1,0 +1,98 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Admin Dashboard — ShopEase{% endblock %}
+{% block admin_content %}
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+    <div>
+        <h1 style="font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;color:var(--secondary);">Dashboard</h1>
+        <p style="color:var(--text-muted);">Welcome back, Admin Rahul 👋</p>
+    </div>
+    {% if new_orders > 0 %}
+    <div style="background:#fff4d6;color:#7a5500;padding:10px 18px;border-radius:var(--radius-sm);font-weight:600;font-size:0.9rem;">
+        🔔 {{ new_orders }} new order(s) waiting!
+    </div>
+    {% endif %}
+</div>
+
+<!-- STATS GRID -->
+<div class="stats-grid">
+    <div class="stat-card orange">
+        <div class="stat-icon">🛍️</div>
+        <div class="stat-label">Total Products</div>
+        <div class="stat-value">{{ total_products }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">📦</div>
+        <div class="stat-label">Total Orders</div>
+        <div class="stat-value">{{ total_orders }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-label">Customers</div>
+        <div class="stat-value">{{ total_customers }}</div>
+    </div>
+    <div class="stat-card green">
+        <div class="stat-icon">💰</div>
+        <div class="stat-label">Total Revenue</div>
+        <div class="stat-value">₹{{ "%.0f"|format(revenue) }}</div>
+    </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+    <!-- RECENT ORDERS -->
+    <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <div class="card-title" style="margin-bottom:0;">📋 Recent Orders</div>
+            <a href="/admin/orders" class="btn btn-outline btn-sm">View All</a>
+        </div>
+        {% if recent_orders %}
+        {% for order in recent_orders %}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+            <div>
+                <div style="font-weight:600;font-size:0.9rem;">{{ order.product }}</div>
+                <div style="font-size:0.78rem;color:var(--text-muted);">{{ order.order_id }} · {{ order.name }}</div>
+            </div>
+            <span class="status-badge status-{{ order.status|lower }}">{{ order.status }}</span>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p class="text-muted text-center">No orders yet.</p>
+        {% endif %}
+    </div>
+
+    <!-- LOW STOCK ALERTS -->
+    <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <div class="card-title" style="margin-bottom:0;">⚠️ Low Stock Alert</div>
+            <a href="/admin/products" class="btn btn-outline btn-sm">Manage</a>
+        </div>
+        {% if low_stock %}
+        {% for product in low_stock %}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+            <div>
+                <div style="font-weight:600;font-size:0.9rem;">{{ product.name }}</div>
+                <div style="font-size:0.78rem;color:var(--text-muted);">{{ product.category }}</div>
+            </div>
+            {% if product.stock == 0 %}
+            <span class="stock-badge stock-out">Out of Stock</span>
+            {% else %}
+            <span class="stock-badge stock-low">{{ product.stock }} left</span>
+            {% endif %}
+        </div>
+        {% endfor %}
+        {% else %}
+        <div style="text-align:center;padding:30px;color:var(--accent);">
+            <div style="font-size:2rem;">✅</div>
+            <p style="font-weight:600;margin-top:8px;">All products well stocked!</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+@media (max-width: 768px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    div[style*="grid-template-columns:1fr 1fr"] { grid-template-columns: 1fr !important; }
+}
+</style>
+{% endblock %}
